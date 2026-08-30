@@ -1,0 +1,42 @@
+# Contributor: Steven <steven@example.com>
+# Maintainer: Steven <steven@example.com>
+pkgname=hyprland-guiutils
+pkgver=0.2.2
+pkgrel=1
+_commit="a16ad89ed5fb4192c966018a80c652de8d96f748"
+pkgdesc="Hyprland GUI utilities"
+url="https://github.com/hyprwm/hyprland-guiutils"
+arch="all"
+license="BSD-3-Clause"
+source="https://github.com/hyprwm/hyprland-guiutils/archive/v$pkgver/hyprland-guiutils-v$pkgver.tar.gz"
+builddir="$srcdir/hyprland-guiutils-$pkgver"
+makedepends="
+ cairo-dev
+ pango-dev
+ hyprgraphics-dev
+ aquamarine-dev
+ cmake
+ samurai
+ hyprtoolkit-dev
+ hyprlang-dev
+ hyprutils-dev
+ pixman-dev
+ libdrm-dev
+ libxkbcommon-dev
+"
+options="!check"
+
+build() {
+ cmake -B build -G Ninja \
+   -DCMAKE_BUILD_TYPE=Release \
+   -DCMAKE_INSTALL_PREFIX=/usr \
+   -DCMAKE_INSTALL_LIBDIR=lib
+ ninja -C build
+}
+
+package() {
+ DESTDIR="$pkgdir" ninja -C build install
+}
+sha512sums="
+e30a0caa34c48e2646f97ff763d031689245888ff7c3f89f3341638b4a6572164fceda2836bb6cb3ef0774e7328ecc34740c6d1542dee82617289becdab4a37d  hyprland-guiutils-v0.2.2.tar.gz
+"

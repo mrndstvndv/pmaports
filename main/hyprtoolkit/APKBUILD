@@ -1,0 +1,50 @@
+# Contributor: Steven <steven@example.com>
+# Maintainer: Steven <steven@example.com>
+pkgname=hyprtoolkit
+pkgver=0.5.4
+pkgrel=1
+pkgdesc="A modern C++ Wayland-native GUI toolkit"
+url="https://github.com/hyprwm/hyprtoolkit"
+arch="all"
+license="BSD-3-Clause"
+source="https://github.com/hyprwm/hyprtoolkit/archive/v$pkgver/hyprtoolkit-v$pkgver.tar.gz"
+builddir="$srcdir/hyprtoolkit-$pkgver"
+makedepends="
+ cmake
+ samurai
+ hyprwayland-scanner
+ wayland-dev
+ wayland-protocols
+ mesa-dev
+ hyprutils-dev
+ hyprlang-dev
+ pixman-dev
+ libdrm-dev
+ libxkbcommon-dev
+ pango-dev
+ cairo-dev
+ iniparser-dev
+ hyprgraphics-dev
+ aquamarine-dev
+"
+subpackages="$pkgname-dev"
+options="!check"
+
+prepare() {
+ default_prepare
+ sed -i "s/OpenGL::OpenGL/OpenGL::GLES3/" CMakeLists.txt
+}
+
+build() {
+ cmake -B build -G Ninja \
+   -DCMAKE_BUILD_TYPE=Release \
+   -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib
+ ninja -C build
+}
+
+package() {
+ DESTDIR="$pkgdir" ninja -C build install
+}
+sha512sums="
+aa35ce4afb1c7295a3ca7c8c392bb6a028aa99427f02f3d5802c90563ac23c5bbd474cc8001fb0cc8ea4e8944c7bb4452b2c1ed2d44bc8c63c93a088d3cd91f1  hyprtoolkit-v0.5.4.tar.gz
+"

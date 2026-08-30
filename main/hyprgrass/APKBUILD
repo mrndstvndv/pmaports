@@ -1,0 +1,59 @@
+# Contributor: Steven <steven@example.com>
+# Maintainer: Steven <steven@example.com>
+pkgname=hyprgrass
+pkgver=0.8.2
+pkgrel=1
+_hyprgrass_commit="56473e9e0b2da34bb3b871e90f40b3fc3d41ba9b"
+_wftouch_commit="8974eb0f6a65464b63dd03b842795cb441fb6403"
+pkgdesc="Touchscreen gestures plugin for Hyprland"
+url="https://github.com/horriblename/hyprgrass"
+arch="all"
+license="MIT AND Apache-2.0"
+source="
+ https://github.com/horriblename/hyprgrass/archive/${_hyprgrass_commit}/hyprgrass-${_hyprgrass_commit}.tar.gz
+ https://github.com/WayfireWM/wf-touch/archive/${_wftouch_commit}/wf-touch-${_wftouch_commit}.tar.gz
+"
+builddir="$srcdir/hyprgrass-${_hyprgrass_commit}"
+makedepends="
+ glm-dev
+ hyprland-dev
+ cmake
+ libdrm-dev
+ libinput-dev
+ libxkbcommon-dev
+ lua5.5-dev
+ meson
+ pixman-dev
+ samurai
+ wayland-dev
+"
+
+prepare() {
+ default_prepare
+ rm -rf "$builddir/subprojects/wf-touch"
+ mkdir -p "$builddir/subprojects"
+ mv "$srcdir/wf-touch-${_wftouch_commit}" "$builddir/subprojects/wf-touch"
+ sed -i "s|glm = dependency('glm')|glm = declare_dependency()|" subprojects/wf-touch/meson.build
+ sed -i "s|dependency('lua')|dependency('lua5.5')|" meson.build
+}
+
+build() {
+ meson setup build \
+  --prefix=/usr \
+  --buildtype=release \
+  -Dtests=disabled \
+  -Dhyprgrass-pulse=false \
+  -Dhyprgrass-backlight=false
+ meson compile -C build
+}
+
+package() {
+ DESTDIR="$pkgdir" meson install -C build
+ install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+ install -Dm644 LICENSE.aosp "$pkgdir"/usr/share/licenses/$pkgname/LICENSE.aosp
+}
+
+sha512sums="
+084d18f39a09a28c265825912c7cf79dba0a362c17a9349d1d0f97161ba4c2585ac33fb630dfad7c152e6ffcc5db6be87b6fafe0e086d838268941f4b82b7c9e  hyprgrass-56473e9e0b2da34bb3b871e90f40b3fc3d41ba9b.tar.gz
+c57ab4d235b5551766cc33bf7ab773895c730a0ff306e5372284b8492a6a32a1e4d3c60a60a105043e9294e98d314f545a6ce9882bcebfdc50fb2447d0c05500  wf-touch-8974eb0f6a65464b63dd03b842795cb441fb6403.tar.gz
+"

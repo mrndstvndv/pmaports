@@ -1,0 +1,55 @@
+# Contributor: Steven <steven@example.com>
+# Maintainer: Steven <steven@example.com>
+pkgname=hyprpaper
+pkgver=0.8.4
+pkgrel=0
+pkgdesc="A blazing fast Wayland wallpaper utility with IPC controls"
+url="https://github.com/hyprwm/hyprpaper"
+arch="all"
+license="BSD-3-Clause"
+source="https://github.com/hyprwm/hyprpaper/archive/v$pkgver/hyprpaper-v$pkgver.tar.gz"
+builddir="$srcdir/hyprpaper-$pkgver"
+makedepends="
+ aquamarine-dev
+ bash
+ cairo-dev
+ cmake
+ file-dev
+ hyprgraphics-dev
+ hyprlang-dev
+ iniparser-dev
+ hyprtoolkit-dev
+ hyprutils-dev
+ hyprwayland-scanner
+ hyprwire-dev
+ libdrm-dev
+ mesa-dev
+ pango-dev
+ pixman-dev
+ samurai
+ wayland-dev
+ wayland-protocols
+"
+options="!check"
+
+prepare() {
+ default_prepare
+ sed -i 's/ | sed -s / | sed /' CMakeLists.txt
+ sed -i '/^[[:space:]]*OpenGL$/d' CMakeLists.txt
+}
+
+build() {
+ cmake -B build -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX=/usr \
+  -DCMAKE_INSTALL_LIBDIR=lib
+ cmake --build build
+}
+
+package() {
+ DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+919b13f3e2a48ff067fec3713f2d7bc1bfda5d3b14a8bf819a49a8a5c5b0571781c31b508d16e71d68d17042607617ec8a34657f706e089f82ec2f14d1b7ffa1  hyprpaper-v0.8.4.tar.gz
+"

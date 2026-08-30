@@ -1,0 +1,44 @@
+maintainer="Zach DeCook <zachdecook@librem.one>"
+pkgname=hyprgraphics
+pkgver=0.5.1
+pkgrel=2
+pkgdesc="Hyprland graphics / resource utilities"
+url="https://github.com/hyprwm/hyprgraphics"
+arch="all"
+license="BSD-3-Clause"
+source="https://github.com/hyprwm/hyprgraphics/archive/v$pkgver/hyprgraphics-v$pkgver.tar.gz"
+subpackages="$pkgname-doc $pkgname-dev"
+makedepends="
+ cairo-dev
+ cmake
+ file-dev
+ hyprutils-dev
+ libdrm-dev
+ libheif-dev
+ libjpeg-turbo-dev
+ libjxl-dev
+ libpng-dev
+ librsvg-dev
+ libwebp-dev
+ mesa-dev
+ samurai
+ pixman-dev
+"
+options="!check"
+
+build() {
+ cmake -B build -G Ninja \
+  -DCMAKE_INSTALL_PREFIX=/usr \
+  -DCMAKE_INSTALL_LIBDIR=lib \
+  -DCMAKE_BUILD_TYPE=None
+ cmake --build build
+}
+
+package() {
+ DESTDIR="$pkgdir" cmake --install build
+ install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}
+
+sha512sums="
+5e0a9717536bef833a148e68ad61f479d445dc0e6ee23a0b3b8b922cc1939e0256e26ecfcf7709e4ec057197699c6145cf0b2228785a1061c1412d2b2c962be6  hyprgraphics-v0.5.1.tar.gz
+"

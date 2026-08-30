@@ -1,0 +1,50 @@
+# Contributor: Steven <steven@example.com>
+# Maintainer: Steven <steven@example.com>
+pkgname=tapviz
+pkgver=0.1.0
+pkgrel=0
+pkgdesc="Android-like touchscreen tap visualizer for Hyprland"
+url="https://hypr.land"
+arch="aarch64"
+license="unknown"
+depends="hyprland=0.56.2-r0"
+# Deterministic git archive of tapviz commit
+# d4005ea3005576707e15e183acc2e38f420072ad.
+source="tapviz-$pkgver.tar.gz"
+builddir="$srcdir/tapviz-$pkgver"
+makedepends="
+ cairo-dev
+ cmake
+ eudev-dev
+ glslang-dev
+ hyprland-dev=0.56.2-r0
+ libdrm-dev
+ libinput-dev
+ libxkbcommon-dev
+ lua5.5-dev
+ mesa-dev
+ pango-dev
+ pixman-dev
+ pkgconf
+ samurai
+ wayland-dev
+"
+options="!check"
+
+build() {
+ cmake -B build -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX=/usr \
+  -DCMAKE_INSTALL_LIBDIR=lib
+ cmake --build build
+}
+
+package() {
+ DESTDIR="$pkgdir" cmake --install build
+ install -d "$pkgdir"/usr/lib/hyprland/plugins
+ mv "$pkgdir"/usr/lib/libtapviz.so "$pkgdir"/usr/lib/hyprland/plugins/tapviz.so
+}
+
+sha512sums="
+4dfe20293aa02459bfd4c21ae1b4155e8340aff5e7f147a310fa1de713e1a4782f2f094b9217cc64f5b946bdb4c2c4c233d0b092590c3a6a344c47842586d602  tapviz-0.1.0.tar.gz
+"

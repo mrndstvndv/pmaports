@@ -1,0 +1,36 @@
+# Contributor: Steven <steven@example.com>
+# Maintainer: Steven <steven@example.com>
+pkgname=hyprutils
+pkgver=0.14.0
+pkgrel=0
+pkgdesc="Hyprland utilities library used across the ecosystem"
+url="https://github.com/hyprwm/hyprutils"
+arch="all"
+license="BSD-3-Clause"
+source="https://github.com/hyprwm/hyprutils/archive/v$pkgver/hyprutils-v$pkgver.tar.gz"
+builddir="$srcdir/hyprutils-$pkgver"
+makedepends="cmake pixman-dev samurai"
+subpackages="$pkgname-dev"
+options="!check"
+
+build() {
+  cmake -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_LIBDIR=lib
+  ninja -C build
+}
+
+package() {
+  DESTDIR="$pkgdir" ninja -C build install
+}
+
+dev() {
+  pkgdesc="Hyprland utilities library development files"
+  depends="$pkgname=$pkgver-r$pkgrel"
+  amove usr/include usr/lib/pkgconfig
+}
+
+sha512sums="
+ce66f3af478cfa2d05f999a554db194ca537a6ed117228cfa8b202f2946d4fddb41628089390047514f71bf85187eaf2c71449ee096c87a241a5c0df05a7a889  hyprutils-v0.14.0.tar.gz
+"

@@ -1,0 +1,97 @@
+# Contributor: Steven <steven@example.com>
+# Maintainer: Steven <steven@example.com>
+pkgname=hyprland
+pkgver=0.56.2
+pkgrel=0
+# Keep this aligned with the source commit used to build plugins.
+_commit="efb50993780079460b0cbed1363e2166a2de1d9f"
+pkgdesc="Independent, highly customizable, dynamic tiling Wayland compositor"
+url="https://hypr.land"
+arch="all"
+license="BSD-3-Clause"
+source="https://github.com/hyprwm/Hyprland/archive/v$pkgver/Hyprland-v$pkgver.tar.gz"
+builddir="$srcdir/Hyprland-$pkgver"
+makedepends="
+ aquamarine-dev
+ cairo-dev
+ cmake
+ elogind-dev
+ glaze
+ glslang-dev
+ hyprcursor-dev
+ hyprgraphics-dev
+ hyprland-protocols
+ hyprlang-dev
+ hyprwayland-scanner
+ hyprutils-dev
+ hyprwire-dev
+ jq
+ lcms2-dev
+ libdrm-dev
+ libei-dev
+ libinput-dev
+ libliftoff-dev
+ libxcb-dev
+ libxcursor-dev
+ libxkbcommon-dev
+ mesa-dev
+ muparser-dev
+ pango-dev
+ pixman-dev
+ re2-dev
+ readline-dev
+ spirv-tools-dev
+ samurai
+ tomlplusplus-dev
+ udis86-git-dev
+ util-linux-dev
+ vulkan-loader-dev
+ wayland-dev
+ wayland-protocols
+ xcb-util-errors-dev
+ xcb-util-image-dev
+ xcb-util-renderutil-dev
+ xcb-util-wm-dev
+ xkeyboard-config-dev
+ xwayland-dev
+ lua5.5-dev
+"
+subpackages="
+ $pkgname-doc
+ $pkgname-dev
+ $pkgname-wallpapers::noarch
+ $pkgname-bash-completion
+ $pkgname-fish-completion
+ $pkgname-zsh-completion
+"
+options="!check"
+
+prepare() {
+ default_prepare
+ sed -i 's#std::ranges::starts_with(str_view, prefixes)#std::ranges::equal(prefixes, str_view | std::views::take(prefixes.size()))#' src/helpers/MiscFunctions.cpp
+ sed -i "s/@GIT_COMMIT_HASH@/$_commit/" "$builddir"/src/version.h.in
+ sed -i "s/@GIT_BRANCH@/build-alpine/" "$builddir"/src/version.h.in
+ sed -i "s/@GIT_COMMIT_MESSAGE@/built from Alpine APKBUILD/" "$builddir"/src/version.h.in
+ sed -i "s/@GIT_COMMIT_DATE@/unknown/" "$builddir"/src/version.h.in
+ sed -i "s/@GIT_TAG@/v$pkgver/" "$builddir"/src/version.h.in
+ sed -i "s/@GIT_DIRTY@/clean/" "$builddir"/src/version.h.in
+ sed -i "s/@GIT_COMMITS@/0/" "$builddir"/src/version.h.in
+}
+
+build() {
+ cmake --no-warn-unused-cli -DNO_HYPRPM=true -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_DISABLE_PRECOMPILE_HEADERS=ON -S . -B build -G Ninja
+ ninja -C build
+}
+
+package() {
+ DESTDIR="$pkgdir" ninja -C build install
+}
+
+wallpapers() {
+ pkgdesc="Wallpapers for Hyprland"
+ amove usr/share/hypr/wall*.png
+}
+
+sha512sums="
+517d7de91521d5e330b3472f613797c6afa63f2c6fb3339b73b43d53f6bda8d84ae457881a3e792331dc959ace8f17c9907dd75fce361ab9fb429369abb04655  Hyprland-v0.56.2.tar.gz
+"

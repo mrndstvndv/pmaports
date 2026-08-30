@@ -1,16 +1,40 @@
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1127,6 +1127,9 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
+--- a/drivers/ufs/host/ufs-qcom.c	2026-08-31 07:08:04.640200577 +0800
++++ b/drivers/ufs/host/ufs-qcom.c	2026-08-31 07:09:15.333238765 +0800
+@@ -578,9 +578,7 @@
+ 	if (err)
+ 		goto out;
+ 
+-	err = ufshcd_dme_rmw(hba, DME_VS_CORE_CLK_CTRL_DME_HW_CGC_EN,
+-			     DME_VS_CORE_CLK_CTRL_DME_HW_CGC_EN,
+-			     DME_VS_CORE_CLK_CTRL);
++	/* Skip DME HW CGC on SM8150 */
+ out:
+ 	if (err)
+ 		dev_err(hba->dev, "hw clk gating enabled failed\n");
+@@ -1126,6 +1124,9 @@
  	if (host->hw_ver.major > 0x3)
  		hba->quirks |= UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
  
-+	/* SM8150 UFS controller has broken hardware auto-hibern8 under heavy burst I/O */
++	/* SM8150 UFS controller has broken hardware auto-hibern8 */
 +	hba->quirks |= UFSHCD_QUIRK_BROKEN_AUTO_HIBERN8;
 +
  	if (drvdata && drvdata->quirks)
  		hba->quirks |= drvdata->quirks;
  }
-@@ -1504,7 +1507,8 @@ static int ufs_qcom_fw_managed_init(struct ufs_hba *hba)
+@@ -1205,12 +1206,9 @@
+ 
+ static void ufs_qcom_set_caps(struct ufs_hba *hba)
+ {
+-	hba->caps |= UFSHCD_CAP_CLK_GATING | UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
+ 	hba->caps |= UFSHCD_CAP_CLK_SCALING | UFSHCD_CAP_WB_WITH_CLK_SCALING;
+ 	hba->caps |= UFSHCD_CAP_AUTO_BKOPS_SUSPEND;
+ 	hba->caps |= UFSHCD_CAP_WB_EN;
+-	hba->caps |= UFSHCD_CAP_AGGR_POWER_COLLAPSE;
+-	hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
+ 
+ 	ufs_qcom_set_host_caps(hba);
+ }
+@@ -1501,7 +1499,8 @@
  	ufs_qcom_advertise_quirks(hba);
  	host->hba->quirks &= ~UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
  

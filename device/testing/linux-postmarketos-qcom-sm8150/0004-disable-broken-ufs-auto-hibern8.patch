@@ -1,0 +1,12 @@
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -1127,6 +1127,9 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
+ 	if (host->hw_ver.major > 0x3)
+ 		hba->quirks |= UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
+ 
++	/* SM8150 UFS controller has broken hardware auto-hibern8 under heavy burst I/O */
++	hba->quirks |= UFSHCD_QUIRK_BROKEN_AUTO_HIBERN8;
++
+ 	if (drvdata && drvdata->quirks)
+ 		hba->quirks |= drvdata->quirks;
+ }

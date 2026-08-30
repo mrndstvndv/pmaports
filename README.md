@@ -8,5 +8,8 @@ pmaports checkout used by pmbootstrap, or use this tree as the local recipe
 source when the required base packages are available from Alpine/postmarketOS
 repositories.
 
-The current collection contains the Hyprland ecosystem recipes used on the
-Xiaomi POCO X3 Pro and the tapviz plugin recipe.
+The current collection contains:
+- Hyprland ecosystem recipes and the tapviz plugin (`main/`)
+- Xiaomi POCO X3 Pro (`vayu`) device configs and firmware (`device/testing/`)
+- Mainline SM8150 Linux kernel package with UFS auto-hibern8 stability fix (`device/testing/linux-postmarketos-qcom-sm8150/`)
+

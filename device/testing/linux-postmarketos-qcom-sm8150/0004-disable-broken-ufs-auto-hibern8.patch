@@ -10,3 +10,13 @@
  	if (drvdata && drvdata->quirks)
  		hba->quirks |= drvdata->quirks;
  }
+@@ -1504,7 +1507,8 @@ static int ufs_qcom_fw_managed_init(struct ufs_hba *hba)
+ 	ufs_qcom_advertise_quirks(hba);
+ 	host->hba->quirks &= ~UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
+ 
+-	hba->spm_lvl = hba->rpm_lvl = hba->pm_lvl_min = UFS_PM_LVL_5;
++	hba->spm_lvl = hba->pm_lvl_min = UFS_PM_LVL_5;
++	hba->rpm_lvl = UFS_PM_LVL_0;
+ 
+ 	ufs_qcom_set_host_params(hba);
+ 	ufs_qcom_parse_gear_limits(hba);

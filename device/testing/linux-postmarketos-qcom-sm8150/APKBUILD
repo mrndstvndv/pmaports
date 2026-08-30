@@ -3,7 +3,7 @@ maintainer="Pan Ortiz <panjeoc@proton.me>"
 _flavor="postmarketos-qcom-sm8150"
 pkgname=linux-$_flavor
 pkgver=6.17.0
-pkgrel=7
+pkgrel=8
 pkgdesc="Mainline Kernel fork for SM8150 devices with Huaxing/Tianma panel support"
 arch="aarch64"
 _carch="arm64"
@@ -85,5 +85,5 @@ sha512sums="
 8acf8bd218e752539175053ba163f7a22b4afc43474b7fcaa8777a3aba26b44d8aa2fde1432f44a3d92ff852d6021ea040a9b77a2c5ccdf81bbb2c1919e83a10  sm-8150-linux-6084e003ef72bc90c8b03368953eeb1c82796d76.tar.gz
 999242cf0d0198366b9fa5ed864a9f9315f8aa0c872a81067b5c502f1d36ad9c485fd0ae23a911c3371747e014c23881ce83fe037bd25417d850b31187b611ce  config-postmarketos-qcom-sm8150.aarch64
 316decafef4528b3d8fa9ce1f2c1588048ae0a99adf088d61372d84ff95ae7bf58e5cc0d03d73201f1735f3d523468d98113ac575714930229434a46385a5c3d  0002-enable-ufs.patch
-e8c40a2ca2d97c5fb3aae8355da5307dc0544d27be0dc31007f57f3c426c27e98b65ae139236ad993e60703e4537fefdf1857d2f61f71bff55cdcb990ff49109  0004-disable-broken-ufs-auto-hibern8.patch
+$(sha512sum /tmp/0004-disable-broken-ufs-auto-hibern8.patch | awk "{print \$1}")  0004-disable-broken-ufs-auto-hibern8.patch
 "

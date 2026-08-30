@@ -32,9 +32,7 @@ _commit="6084e003ef72bc90c8b03368953eeb1c82796d76"
 source="
 	sm-8150-linux-$_commit.tar.gz::$url/-/archive/$_commit/sm-8150-linux-$_commit.tar.gz
 	config-$_flavor.$arch
-	0001-lid-switch-fix.patch
 	0002-enable-ufs.patch
-	0003-fix-llvm-build.patch
 	0004-disable-broken-ufs-auto-hibern8.patch
 "
 builddir="$srcdir/sm-8150-linux-$_commit"
@@ -86,8 +84,6 @@ package() {
 sha512sums="
 8acf8bd218e752539175053ba163f7a22b4afc43474b7fcaa8777a3aba26b44d8aa2fde1432f44a3d92ff852d6021ea040a9b77a2c5ccdf81bbb2c1919e83a10  sm-8150-linux-6084e003ef72bc90c8b03368953eeb1c82796d76.tar.gz
 999242cf0d0198366b9fa5ed864a9f9315f8aa0c872a81067b5c502f1d36ad9c485fd0ae23a911c3371747e014c23881ce83fe037bd25417d850b31187b611ce  config-postmarketos-qcom-sm8150.aarch64
-15422195814314d8f9ce905408d1256bec753ca1b58babc59391c4cb8b4fbbc9034c622129d52964ccceb39e6f4326f0eae5ca9271496e1a0432416ecd09cc1d  0001-lid-switch-fix.patch
 316decafef4528b3d8fa9ce1f2c1588048ae0a99adf088d61372d84ff95ae7bf58e5cc0d03d73201f1735f3d523468d98113ac575714930229434a46385a5c3d  0002-enable-ufs.patch
-61653196d559a725e372597f7a2d8da4f308bc14c610fce6ecc982fab25757dd37a684480b32c1b05547144c1ec14000f6ddf542c605894edb68e7484d40fbf1  0003-fix-llvm-build.patch
 a72ba72a6fda62f3f30e18d76df0dbab7d6cae2562841d412afb6275ac38c740e7bbb537283252966ac5e896819fc2eae092a6f9fd930646d6dcc5cb254a2613  0004-disable-broken-ufs-auto-hibern8.patch
 "

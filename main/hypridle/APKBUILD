@@ -1,0 +1,38 @@
+# Contributor: Steven <steven@example.com>
+# Maintainer: Steven <steven@example.com>
+pkgname=hypridle
+pkgver=0.1.8
+pkgrel=0
+pkgdesc="An idle management daemon for Hyprland"
+url="https://github.com/hyprwm/hypridle"
+arch="all"
+license="BSD-3-Clause"
+source="https://github.com/hyprwm/hypridle/archive/v$pkgver/hypridle-v$pkgver.tar.gz"
+builddir="$srcdir/hypridle-$pkgver"
+makedepends="
+	cmake
+	hyprland-protocols
+	hyprlang-dev
+	hyprutils-dev
+	hyprwayland-scanner
+	pkgconf
+	samurai
+	sdbus-cpp-dev
+	wayland-dev
+	wayland-protocols
+"
+subpackages=""
+options="!check"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+	install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}

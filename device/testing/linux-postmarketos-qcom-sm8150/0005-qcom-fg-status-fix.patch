@@ -1,0 +1,114 @@
+diff --git a/drivers/power/supply/qcom_fg.c b/drivers/power/supply/qcom_fg.c
+index 1282d95..83658e1 100644
+--- a/drivers/power/supply/qcom_fg.c
++++ b/drivers/power/supply/qcom_fg.c
+@@ -78,6 +78,8 @@ struct qcom_fg_ops {
+ 	int (*set_temp_threshold)(struct qcom_fg_chip *chip,
+ 				  enum power_supply_property psp, int);
+ 
++	/* Whether get_current() follows the power-supply API polarity. */
++	bool current_positive_is_charging;
+ 	short memif_base;
+ };
+ 
+@@ -850,6 +852,7 @@ static const struct qcom_fg_ops ops_fg = {
+ 	.get_voltage = qcom_fg_get_voltage,
+ 	.get_temp_threshold = qcom_fg_get_temp_threshold,
+ 	.set_temp_threshold = qcom_fg_set_temp_threshold,
++	.current_positive_is_charging = false,
+ 	.memif_base = 0x400,
+ };
+ 
+@@ -860,6 +863,7 @@ static const struct qcom_fg_ops ops_fg_gen3 = {
+ 	.get_current = qcom_fg_gen3_get_current,
+ 	.get_voltage = qcom_fg_gen3_get_voltage,
+ 	.get_temp_threshold = qcom_fg_gen3_get_temp_threshold,
++	.current_positive_is_charging = true,
+ 	.memif_base = 0x400,
+ };
+ 
+@@ -870,6 +874,7 @@ static const struct qcom_fg_ops ops_fg_gen4 = {
+ 	.get_current = qcom_fg_gen3_get_current,
+ 	.get_voltage = qcom_fg_gen3_get_voltage,
+ 	.get_temp_threshold = qcom_fg_gen3_get_temp_threshold,
++	.current_positive_is_charging = true,
+ 	.memif_base = 0x300,
+ };
+ 
+@@ -926,10 +931,15 @@ static int qcom_fg_get_property(struct power_supply *psy,
+ 				val->intval = POWER_SUPPLY_STATUS_UNKNOWN;
+ 				break;
+ 			}
+-			if (temp < 0)
+-				val->intval = POWER_SUPPLY_STATUS_CHARGING;
+-			else if (temp > 0)
+-				val->intval = POWER_SUPPLY_STATUS_DISCHARGING;
++			/* Keep the fallback polarity explicit per PMIC generation. */
++			if (temp > 0)
++				val->intval = chip->ops->current_positive_is_charging ?
++					POWER_SUPPLY_STATUS_CHARGING :
++					POWER_SUPPLY_STATUS_DISCHARGING;
++			else if (temp < 0)
++				val->intval = chip->ops->current_positive_is_charging ?
++					POWER_SUPPLY_STATUS_DISCHARGING :
++					POWER_SUPPLY_STATUS_CHARGING;
+ 			else
+ 				val->intval = POWER_SUPPLY_STATUS_NOT_CHARGING;
+ 		}
+@@ -1123,14 +1133,22 @@ static int qcom_fg_notifier_call(struct notifier_block *nb, unsigned long val,
+ {
+ 	struct qcom_fg_chip *chip = container_of(nb, struct qcom_fg_chip, nb);
+ 	struct power_supply *psy = v;
+-	union power_supply_propval propval;
++	union power_supply_propval propval = {};
+ 	int ret;
+ 
+ 	if (psy == chip->chg_psy) {
+ 		ret = power_supply_get_property(psy, POWER_SUPPLY_PROP_STATUS,
+ 						&propval);
+-		if (ret)
++		if (ret) {
+ 			chip->status = POWER_SUPPLY_STATUS_UNKNOWN;
++			power_supply_changed(chip->batt_psy);
++
++			/* The charger may not be ready to report status yet. */
++			cancel_delayed_work_sync(&chip->status_changed_work);
++			schedule_delayed_work(&chip->status_changed_work,
++					      msecs_to_jiffies(1000));
++			return NOTIFY_OK;
++		}
+ 
+ 		chip->status = propval.intval;
+ 
+@@ -1171,6 +1189,7 @@ static int qcom_fg_probe(struct platform_device *pdev)
+ 
+ 	chip->dev = &pdev->dev;
+ 	chip->ops = of_device_get_match_data(&pdev->dev);
++	chip->status = POWER_SUPPLY_STATUS_UNKNOWN;
+ 
+ 	chip->regmap = dev_get_regmap(pdev->dev.parent, NULL);
+ 	if (!chip->regmap) {
+@@ -1330,11 +1349,23 @@ static int qcom_fg_probe(struct platform_device *pdev)
+ 						    "power-supplies");
+ 	if (IS_ERR(chip->chg_psy)) {
+ 		ret = PTR_ERR(chip->chg_psy);
++		if (ret == -EPROBE_DEFER)
++			return ret;
+ 		dev_warn(chip->dev, "Failed to get charger supply: %d\n", ret);
+ 		chip->chg_psy = NULL;
+ 	}
+ 
+ 	if (chip->chg_psy) {
++		union power_supply_propval propval = {};
++
++		ret = power_supply_get_property(chip->chg_psy,
++						POWER_SUPPLY_PROP_STATUS, &propval);
++		if (ret)
++			dev_warn(chip->dev,
++				 "Failed to read initial charger status: %d\n", ret);
++		else
++			chip->status = propval.intval;
++
+ 		INIT_DELAYED_WORK(&chip->status_changed_work,
+ 				  qcom_fg_status_changed_worker);
+ 

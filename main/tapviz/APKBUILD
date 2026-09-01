@@ -2,16 +2,16 @@
 # Maintainer: Steven <steven@example.com>
 pkgname=tapviz
 pkgver=0.1.0
-pkgrel=0
+pkgrel=1
 pkgdesc="Android-like touchscreen tap visualizer for Hyprland"
-url="https://hypr.land"
+url="https://github.com/mrndstvndv/tapviz"
 arch="aarch64"
 license="unknown"
 depends="hyprland=0.56.2-r0"
-# Deterministic git archive of tapviz commit
-# d4005ea3005576707e15e183acc2e38f420072ad.
-source="tapviz-$pkgver.tar.gz"
-builddir="$srcdir/tapviz-$pkgver"
+# Deterministic git archive of tapviz commit.
+_commit=651fcc37cec89e87e0fb5085d129de89dcadab1e
+source="tapviz-$pkgver.tar.gz::https://github.com/mrndstvndv/tapviz/archive/$_commit/tapviz-$_commit.tar.gz"
+builddir="$srcdir/tapviz-$_commit"
 makedepends="
  cairo-dev
  cmake
@@ -46,5 +46,5 @@ package() {
 }
 
 sha512sums="
-4dfe20293aa02459bfd4c21ae1b4155e8340aff5e7f147a310fa1de713e1a4782f2f094b9217cc64f5b946bdb4c2c4c233d0b092590c3a6a344c47842586d602  tapviz-0.1.0.tar.gz
+84ebf90a3b6b5ada4c852d3899524458a22e1fcaf7c4643aac793ae12260046ac85fd772f59a9fa6b0b3663742b91b6372ebc4fa3578ee1a7d1d2acd784bab67  tapviz-0.1.0.tar.gz
 "

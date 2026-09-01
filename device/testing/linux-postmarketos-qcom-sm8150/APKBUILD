@@ -3,7 +3,7 @@ maintainer="Pan Ortiz <panjeoc@proton.me>"
 _flavor="postmarketos-qcom-sm8150"
 pkgname=linux-$_flavor
 pkgver=6.17.0
-pkgrel=9
+pkgrel=10
 pkgdesc="Mainline Kernel fork for SM8150 devices with Huaxing/Tianma panel support"
 arch="aarch64"
 _carch="arm64"
@@ -35,6 +35,7 @@ source="
 	0002-enable-ufs.patch
 	0004-disable-broken-ufs-auto-hibern8.patch
 	0005-qcom-fg-status-fix.patch
+	0006-novatek-dt2w-support.patch
 "
 builddir="$srcdir/sm-8150-linux-$_commit"
 
@@ -83,9 +84,10 @@ package() {
 }
 
 sha512sums="
-8acf8bd218e752539175053ba163f7a22b4afc43474b7fcaa8777a3aba26b44d8aa2fde1432f44a3d92ff852d6021ea040a9b77a2c5ccdf81bbb2c1919e83a10  sm-8150-linux-6084e003ef72bc90c8b03368953eeb1c82796d76.tar.gz
+0ee41378baea06036b013035e5d96b38886ed62b1236785a3f08d147a399522a8fd5539a50d7d3154ed45469a3901267211158f4d972279d6ac1c90fabae1eac  sm-8150-linux-6084e003ef72bc90c8b03368953eeb1c82796d76.tar.gz
 999242cf0d0198366b9fa5ed864a9f9315f8aa0c872a81067b5c502f1d36ad9c485fd0ae23a911c3371747e014c23881ce83fe037bd25417d850b31187b611ce  config-postmarketos-qcom-sm8150.aarch64
 316decafef4528b3d8fa9ce1f2c1588048ae0a99adf088d61372d84ff95ae7bf58e5cc0d03d73201f1735f3d523468d98113ac575714930229434a46385a5c3d  0002-enable-ufs.patch
 8345c4d101d038e3814ea96e9dd2b5194a569b9e28496ecd115252a0da21ff44cb408e39bf3ed8c08bdab81fa6f12049aa5fb7e9054fabf9f424282fd27ac700  0004-disable-broken-ufs-auto-hibern8.patch
 0f4bca9ef43effbb0152bee4f55d818a12a1f49c8c524d7c53876297893fbf1eadbccd44396402680503939ba167867191474633ee63ddb12d9b4d81ca039c0b  0005-qcom-fg-status-fix.patch
+f0ca9813f017779e0224172b851efdd9f7005ffa5afb23adfd67ed4e7dcf14fc443c3db193d4e8285573b7bc5199815d5490b3dae1d055d07f974ad2c8ee1491  0006-novatek-dt2w-support.patch
 "

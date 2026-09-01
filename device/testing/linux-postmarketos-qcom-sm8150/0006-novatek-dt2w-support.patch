@@ -1,0 +1,441 @@
+diff --git a/drivers/gpu/drm/msm/dsi/dsi_manager.c b/drivers/gpu/drm/msm/dsi/dsi_manager.c
+index 537363054..fe1e0d49f 100644
+--- a/drivers/gpu/drm/msm/dsi/dsi_manager.c
++++ b/drivers/gpu/drm/msm/dsi/dsi_manager.c
+@@ -389,6 +389,7 @@ static void dsi_mgr_bridge_post_disable(struct drm_bridge *bridge)
+ 
+ disable_phy:
+ 	dsi_mgr_phy_disable(id);
++	mi_drm_notifier_call_chain(MI_DRM_EVENT_BLANK, &notifier_data);
+ }
+ 
+ static void dsi_mgr_bridge_mode_set(struct drm_bridge *bridge,
+diff --git a/drivers/gpu/drm/panel/panel-huaxing-nt36672.c b/drivers/gpu/drm/panel/panel-huaxing-nt36672.c
+index 844c417ab..bb2293a85 100644
+--- a/drivers/gpu/drm/panel/panel-huaxing-nt36672.c
++++ b/drivers/gpu/drm/panel/panel-huaxing-nt36672.c
+@@ -5,6 +5,7 @@
+ 
+ #include <linux/delay.h>
+ #include <linux/gpio/consumer.h>
++#include <linux/input/nt36672.h>
+ #include <linux/mod_devicetable.h>
+ #include <linux/module.h>
+ 
+@@ -147,6 +148,25 @@ static int nt36672_huaxing_on(struct nt36672_huaxing *ctx)
+ 	return dsi_ctx.accum_err;
+ }
+ 
++static int nt36672_huaxing_off(struct nt36672_huaxing *ctx)
++{
++	struct mipi_dsi_multi_context dsi_ctx = { .dsi = ctx->dsi };
++	unsigned long mode_flags = ctx->dsi->mode_flags;
++
++	/* Downstream sends the TDDI sleep sequence in high-speed mode. */
++	ctx->dsi->mode_flags &= ~MIPI_DSI_MODE_LPM;
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xff, 0x27);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xfb, 0x01);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x3f, 0x00);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xff, 0x10);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, MIPI_DCS_SET_DISPLAY_OFF, 0x00);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, MIPI_DCS_ENTER_SLEEP_MODE, 0x00);
++	mipi_dsi_msleep(&dsi_ctx, 70);
++	ctx->dsi->mode_flags = mode_flags;
++
++	return dsi_ctx.accum_err;
++}
++
+ static int nt36672_huaxing_prepare(struct drm_panel *panel)
+ {
+ 	struct nt36672_huaxing *ctx = to_nt36672_huaxing(panel);
+@@ -185,10 +205,15 @@ static int nt36672_huaxing_prepare(struct drm_panel *panel)
+ static int nt36672_huaxing_unprepare(struct drm_panel *panel)
+ {
+ 	struct nt36672_huaxing *ctx = to_nt36672_huaxing(panel);
++	int ret;
++
++	if (nvt_ts_wakeup_enabled())
++		return 0;
+ 
++	ret = nt36672_huaxing_off(ctx);
+ 	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ static const struct drm_display_mode nt36672_huaxing_mode = {
+diff --git a/drivers/gpu/drm/panel/panel-tianma-nt36672.c b/drivers/gpu/drm/panel/panel-tianma-nt36672.c
+index 926ecf65a..bfd8f7698 100644
+--- a/drivers/gpu/drm/panel/panel-tianma-nt36672.c
++++ b/drivers/gpu/drm/panel/panel-tianma-nt36672.c
+@@ -5,6 +5,7 @@
+ 
+ #include <linux/delay.h>
+ #include <linux/gpio/consumer.h>
++#include <linux/input/nt36672.h>
+ #include <linux/mod_devicetable.h>
+ #include <linux/module.h>
+ 
+@@ -168,6 +169,25 @@ static int nt36672_tianma_on(struct nt36672_tianma *ctx)
+ 	return dsi_ctx.accum_err;
+ }
+ 
++static int nt36672_tianma_off(struct nt36672_tianma *ctx)
++{
++	struct mipi_dsi_multi_context dsi_ctx = { .dsi = ctx->dsi };
++	unsigned long mode_flags = ctx->dsi->mode_flags;
++
++	/* Downstream sends the TDDI sleep sequence in high-speed mode. */
++	ctx->dsi->mode_flags &= ~MIPI_DSI_MODE_LPM;
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xff, 0x27);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xfb, 0x01);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x3f, 0x00);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xff, 0x10);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, MIPI_DCS_SET_DISPLAY_OFF, 0x00);
++	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, MIPI_DCS_ENTER_SLEEP_MODE, 0x00);
++	mipi_dsi_msleep(&dsi_ctx, 70);
++	ctx->dsi->mode_flags = mode_flags;
++
++	return dsi_ctx.accum_err;
++}
++
+ static int nt36672_tianma_prepare(struct drm_panel *panel)
+ {
+ 	struct nt36672_tianma *ctx = to_nt36672_tianma(panel);
+@@ -206,10 +226,15 @@ static int nt36672_tianma_prepare(struct drm_panel *panel)
+ static int nt36672_tianma_unprepare(struct drm_panel *panel)
+ {
+ 	struct nt36672_tianma *ctx = to_nt36672_tianma(panel);
++	int ret;
++
++	if (nvt_ts_wakeup_enabled())
++		return 0;
+ 
++	ret = nt36672_tianma_off(ctx);
+ 	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ static const struct drm_display_mode nt36672_tianma_mode = {
+diff --git a/drivers/input/touchscreen/nt36672/nt36xxx.c b/drivers/input/touchscreen/nt36672/nt36xxx.c
+index 804656d55..30f20321a 100644
+--- a/drivers/input/touchscreen/nt36672/nt36xxx.c
++++ b/drivers/input/touchscreen/nt36672/nt36xxx.c
+@@ -25,6 +25,7 @@
+ #include <asm/uaccess.h>
+ #include <linux/uaccess.h>
+ #include <linux/input/mt.h>
++#include <linux/input/nt36672.h>
+ #include <linux/of_gpio.h>
+ #include <linux/of_irq.h>
+ #include <linux/debugfs.h>
+@@ -52,6 +53,13 @@ uint8_t esd_retry = 0;
+ #endif /* #if NVT_TOUCH_ESD_PROTECT */
+ 
+ struct nvt_ts_data *ts;
++static uint8_t bTouchIsAwake;
++
++bool nvt_ts_wakeup_enabled(void)
++{
++	return ts && ts->db_wakeup;
++}
++EXPORT_SYMBOL_GPL(nvt_ts_wakeup_enabled);
+ 
+ #ifdef CONFIG_DRM
+ static int nvt_drm_notifier_callback(struct notifier_block *self,
+@@ -67,8 +75,6 @@ static int32_t nvt_ts_resume(struct device *dev);
+ uint32_t ENG_RST_ADDR = 0x7FFF80;
+ uint32_t SWRST_N8_ADDR = 0; /* read from dtsi */
+ uint32_t SPI_RD_FAST_ADDR = 0; /* read from dtsi */
+-
+-static uint8_t bTouchIsAwake = 0;
+ /*******************************************************
+ Description:
+ 	Novatek touchscreen irq enable/disable function.
+@@ -854,6 +860,117 @@ static uint32_t nvt_dump_fw_history(void)
+ 	return ret;
+ }
+ 
++static ssize_t double_tap_show(struct device *dev,
++				struct device_attribute *attr, char *buf)
++{
++	return sysfs_emit(buf, "%d\n", ts ? ts->db_wakeup : 0);
++}
++
++static ssize_t double_tap_store(struct device *dev,
++				 struct device_attribute *attr,
++				 const char *buf, size_t count)
++{
++	int val;
++
++	if (kstrtoint(buf, 10, &val))
++		return -EINVAL;
++
++	if (ts) {
++		ts->db_wakeup = !!val;
++		device_init_wakeup(dev, ts->db_wakeup);
++		NVT_LOG("double_tap set to %d\n", ts->db_wakeup);
++	}
++
++	return count;
++}
++static DEVICE_ATTR_RW(double_tap);
++
++#define GESTURE_DOUBLE_CLICK 15
++#define DATA_PROTOCOL 30
++#define FUNCPAGE_GESTURE 1
++
++static void nvt_ts_wakeup_gesture_report(uint8_t gesture_id, uint8_t *data)
++{
++	uint8_t func_type = data[2];
++	uint8_t func_id = data[3];
++
++	if (gesture_id == DATA_PROTOCOL && func_type == FUNCPAGE_GESTURE)
++		gesture_id = func_id;
++
++	if (gesture_id != GESTURE_DOUBLE_CLICK)
++		return;
++
++	NVT_LOG("Gesture: Double Click\n");
++	input_report_key(ts->input_dev, KEY_WAKEUP, 1);
++	input_sync(ts->input_dev);
++	input_report_key(ts->input_dev, KEY_WAKEUP, 0);
++	input_sync(ts->input_dev);
++}
++
++static unsigned long last_tap_jiffies;
++static uint32_t last_tap_x;
++static uint32_t last_tap_y;
++static bool offscreen_touch_active;
++
++static void nvt_ts_software_double_tap_report(uint8_t *point_data)
++{
++	uint32_t input_x = 0;
++	uint32_t input_y = 0;
++	bool touch_active = false;
++	unsigned long now;
++	bool valid_interval;
++	bool nearby;
++	int i;
++
++	for (i = 0; i < ts->max_touch_num; i++) {
++		const int position = 1 + 6 * i;
++		const uint8_t touch_state = point_data[position] & 0x07;
++		const uint8_t input_id = point_data[position] >> 3;
++
++		if (!input_id || input_id > ts->max_touch_num)
++			continue;
++		if (touch_state != 0x01 && touch_state != 0x02)
++			continue;
++
++		input_x = (point_data[position + 1] << 4) |
++			(point_data[position + 3] >> 4);
++		input_y = (point_data[position + 2] << 4) |
++			(point_data[position + 3] & 0x0F);
++		touch_active = true;
++		break;
++	}
++
++	if (!touch_active) {
++		offscreen_touch_active = false;
++		return;
++	}
++	if (offscreen_touch_active)
++		return;
++
++	offscreen_touch_active = true;
++	now = jiffies;
++	valid_interval =
++		time_after_eq(now, last_tap_jiffies + msecs_to_jiffies(100)) &&
++		time_before_eq(now, last_tap_jiffies + msecs_to_jiffies(700));
++	nearby = abs((int32_t)input_x - (int32_t)last_tap_x) <= 200 &&
++		abs((int32_t)input_y - (int32_t)last_tap_y) <= 200;
++
++	if (!last_tap_jiffies || !valid_interval || !nearby) {
++		last_tap_jiffies = now;
++		last_tap_x = input_x;
++		last_tap_y = input_y;
++		return;
++	}
++
++	last_tap_jiffies = 0;
++	NVT_LOG("Software gesture: Double Tap\n");
++	pm_wakeup_event(&ts->client->dev, 5000);
++	input_report_key(ts->input_dev, KEY_WAKEUP, 1);
++	input_sync(ts->input_dev);
++	input_report_key(ts->input_dev, KEY_WAKEUP, 0);
++	input_sync(ts->input_dev);
++}
++
+ #define POINT_DATA_LEN 65
+ /*******************************************************
+ Description:
+@@ -878,6 +995,9 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
+ 	int32_t i = 0;
+ 	int32_t finger_cnt = 0;
+ 
++	if (!bTouchIsAwake)
++		pm_wakeup_event(&ts->client->dev, 5000);
++
+ 	mutex_lock(&ts->lock);
+ 	if (ts->dev_pm_suspend) {
+ 		ret = wait_for_completion_timeout(
+@@ -909,7 +1029,7 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
+ 			NVT_ERR("Dump FW history:\n");
+ 			nvt_dump_fw_history();
+ 		}
+-		nvt_update_firmware(ts->fw_name);
++		ret = nvt_update_firmware(ts->fw_name);
+ 		goto XFER_ERROR;
+ 	}
+ #endif /* #if NVT_TOUCH_WDT_RECOVERY */
+@@ -922,6 +1042,11 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
+ 	}
+ #endif /* #if NVT_TOUCH_ESD_PROTECT */
+ 
++	if (!bTouchIsAwake) {
++		nvt_ts_software_double_tap_report(point_data);
++		goto XFER_ERROR;
++	}
++
+ 	finger_cnt = 0;
+ 
+ 	for (i = 0; i < ts->max_touch_num; i++) {
+@@ -1222,6 +1347,7 @@ static int32_t nvt_ts_probe(struct spi_device *client)
+ 				  BIT_MASK(EV_ABS);
+ 	__set_bit(BTN_TOUCH, ts->input_dev->keybit);
+ 	__set_bit(BTN_TOOL_FINGER, ts->input_dev->keybit);
++	input_set_capability(ts->input_dev, EV_KEY, KEY_WAKEUP);
+ 	ts->input_dev->propbit[0] = BIT(INPUT_PROP_DIRECT);
+ 
+ #if MT_PROTOCOL_B
+@@ -1329,6 +1455,11 @@ static int32_t nvt_ts_probe(struct spi_device *client)
+ #endif
+ 
+ 	bTouchIsAwake = 1;
++	ts->db_wakeup = 1;
++	device_init_wakeup(&client->dev, true);
++	ret = device_create_file(&client->dev, &dev_attr_double_tap);
++	if (ret)
++		NVT_ERR("failed to create sysfs attribute: %d\n", ret);
+ 	NVT_LOG("end\n");
+ 
+ 	nvt_irq_enable(true);
+@@ -1397,6 +1528,9 @@ static void nvt_ts_remove(struct spi_device *client)
+ {
+ 	NVT_LOG("Removing driver...\n");
+ 
++	device_remove_file(&client->dev, &dev_attr_double_tap);
++	device_init_wakeup(&client->dev, false);
++
+ #ifdef CONFIG_DRM
+ 	if (mi_drm_unregister_client(&ts->drm_notif))
+ 		NVT_ERR("Error occurred while unregistering drm_notifier.\n");
+@@ -1499,14 +1633,19 @@ static int32_t nvt_ts_suspend(struct device *dev)
+ 
+ 	mdelay(10);
+ 	if (ts->db_wakeup) {
+-		/* ---write command to enter "wakeup gesture mode"--- */
+-		buf[0] = EVENT_MAP_HOST_CMD;
+-		buf[1] = 0x13;
+-		CTP_SPI_WRITE(ts->client, buf, 2);
++		ret = nvt_update_firmware(ts->fw_name);
++		if (ret) {
++			NVT_ERR("Failed to reload firmware before gesture mode: %d\n",
++				ret);
++			goto unlock;
++		}
+ 
++		last_tap_jiffies = 0;
++		offscreen_touch_active = false;
++		nvt_irq_enable(true);
+ 		enable_irq_wake(ts->client->irq);
+ 
+-		NVT_LOG("Enabled touch wakeup gesture\n");
++		NVT_LOG("Enabled software double-tap wake\n");
+ 
+ 	} else {
+ 		/* ---write command to enter "deep sleep mode"--- */
+@@ -1526,6 +1665,7 @@ static int32_t nvt_ts_suspend(struct device *dev)
+ 		// }
+ 	}
+ 	mdelay(10);
++unlock:
+ 	mutex_unlock(&ts->lock);
+ 	/* release all touches */
+ #if MT_PROTOCOL_B
+@@ -1573,6 +1713,9 @@ static int32_t nvt_ts_resume(struct device *dev)
+ 		return 0;
+ 	}
+ 
++	if (ts->db_wakeup)
++		disable_irq_wake(ts->client->irq);
++
+ 	ts->ic_state = NVT_IC_RESUME_IN;
+ 
+ 	mutex_lock(&ts->lock);
+@@ -1628,21 +1771,23 @@ static int nvt_drm_notifier_callback(struct notifier_block *self,
+ 		container_of(self, struct nvt_ts_data, drm_notif);
+ 
+ 	if (data && ts_data) {
+-		if (event == MI_DRM_EARLY_EVENT_BLANK) {
+-			if (blank == MI_DRM_BLANK_POWERDOWN) {
+-				NVT_LOG("event=%lu, *blank=%d\n", event,
+-					blank);
+-				flush_workqueue(ts_data->event_wq);
+-				nvt_ts_suspend(&ts_data->client->dev);
+-			}
+-		} else if (event == MI_DRM_EVENT_BLANK) {
+-			if (blank == MI_DRM_BLANK_UNBLANK) {
+-				NVT_LOG("event=%lu, *blank=%d\n", event,
+-					blank);
+-				flush_workqueue(ts_data->event_wq);
+-				queue_work(ts_data->event_wq,
+-					   &ts_data->resume_work);
+-			}
++		if (event == MI_DRM_EARLY_EVENT_BLANK &&
++		    blank == MI_DRM_BLANK_POWERDOWN) {
++			NVT_LOG("event=%lu, *blank=%d, disabling IRQ\n",
++				event, blank);
++			nvt_irq_enable(false);
++			return NOTIFY_OK;
++		}
++
++		if (event != MI_DRM_EVENT_BLANK)
++			return NOTIFY_OK;
++
++		NVT_LOG("event=%lu, *blank=%d\n", event, blank);
++		flush_workqueue(ts_data->event_wq);
++		if (blank == MI_DRM_BLANK_POWERDOWN) {
++			nvt_ts_suspend(&ts_data->client->dev);
++		} else if (blank == MI_DRM_BLANK_UNBLANK) {
++			queue_work(ts_data->event_wq, &ts_data->resume_work);
+ 		}
+ 	}
+ 	return NOTIFY_OK;
+diff --git a/include/linux/input/nt36672.h b/include/linux/input/nt36672.h
+new file mode 100644
+index 000000000..87546c071
+--- /dev/null
++++ b/include/linux/input/nt36672.h
+@@ -0,0 +1,17 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++#ifndef _LINUX_INPUT_NT36672_H
++#define _LINUX_INPUT_NT36672_H
++
++#include <linux/kconfig.h>
++#include <linux/types.h>
++
++#if IS_REACHABLE(CONFIG_TOUCHSCREEN_NT36672_SPI)
++bool nvt_ts_wakeup_enabled(void);
++#else
++static inline bool nvt_ts_wakeup_enabled(void)
++{
++	return false;
++}
++#endif
++
++#endif
